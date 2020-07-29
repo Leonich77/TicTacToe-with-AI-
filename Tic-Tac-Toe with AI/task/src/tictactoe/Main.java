@@ -2,20 +2,18 @@ package tictactoe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Main {     //aka controller in term MVC
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        //get user input of initial game field configuration
-        String inStr = scanner.nextLine();
-        if (inStr.length() < 9) {   //there need more complete check user input correctness
-            inStr = "         ";
-        }
+        Random random = new Random();
+
+        String inStr = "         ";
         GameModel gameModel = new GameModel(inStr); // aka Model
         GameField field = new GameField();          // aka View
-
         field.printField(gameModel.getCurentState());
         boolean isStop = false;
         int column;
@@ -42,22 +40,35 @@ public class Main {     //aka controller in term MVC
                 System.out.print("This cell is occupied! Choose another one!\n");
                 continue;
             }
-            /*if (!(++moveCount % 2 == 0)) {            //TODO: not deleted this!
-                gameModel.setUserMove(column, row, 'X');
-            } else {
-                gameModel.setUserMove(column, row, 'O');
-            }*/
+
             gameModel.makeNextMove(column, row);
             field.printField(gameModel.getCurentState());
             strRes = gameModel.analyzeField(gameModel.getCurentState());
-            /*if (strRes.equals("X wins") || strRes.equals("O wins") || strRes.equals("Draw")) {
+            if (strRes.equals("X wins") || strRes.equals("O wins") || strRes.equals("Draw")) {
                 isStop = true;
-                System.out.print(strRes);
-            }*/
-            isStop = true;
+            } else {
+                System.out.println("Making move level \"easy\"");
+                boolean aiBotMoved = false;
+                while (!aiBotMoved) {
+                    int rndCell = random.nextInt(8);
+                    GameModel.ArrayCoordinates ac = GameModel.transformFromStrToArrCoordinates(rndCell);
+                    ac.column++;
+                    ac.row++;
+                    if (!gameModel.isOccupied(ac.column, ac.row)) {
+                        gameModel.makeNextMove(ac.column, ac.row);
+                        field.printField(gameModel.getCurentState());
+                        aiBotMoved = true;
+                    }
+                }
+                strRes = gameModel.analyzeField(gameModel.getCurentState());
+                if (strRes.equals("X wins") || strRes.equals("O wins") || strRes.equals("Draw")) {
+                    isStop = true;
+                }
+            }
             System.out.print(strRes);
         }
     }
+    
 
     private static class GameField {
 
@@ -121,19 +132,46 @@ public class Main {     //aka controller in term MVC
                     num_++;
                 }
 
-                if (i < 3) {
+                /*if (i < 3) {
                     inArr[0][i] = inChArr[i];
                 } else if (i < 6) {
                     inArr[1][i-3] = inChArr[i];
                 } else if (i < 9) {
                     inArr[2][i-6] = inChArr[i];
-                }
+                }*/
+                ArrayCoordinates ac = transformFromStrToArrCoordinates(i);
+                inArr[ac.row][ac.column] = inChArr[i];
             }
             pfd.inArr = inArr;
             pfd.numX = numX;
             pfd.numO = numO;
             pfd.num_ = num_;
             return pfd;
+        }
+
+        private static class ArrayCoordinates {
+            int row;
+            int column;
+
+            ArrayCoordinates() {
+                row = -1;
+                column = -1;
+            }
+        }
+
+        private static ArrayCoordinates transformFromStrToArrCoordinates (int strPosition) {
+            ArrayCoordinates ret = new ArrayCoordinates();
+            if (strPosition < 3) {
+                ret.row = 0;
+                ret.column = strPosition;
+            } else if (strPosition < 6) {
+                ret.row = 1;
+                ret.column = strPosition - 3;
+            } else if (strPosition < 9) {
+                ret.row = 2;
+                ret.column = strPosition - 6;
+            }
+            return ret;
         }
 
         private static int transformColumnCoordinate(int column) {
@@ -155,7 +193,7 @@ public class Main {     //aka controller in term MVC
             } else if (cl.lines.size() == 0 && pfd.num_ == 0) {
                 out = "Draw";
             } else if (pfd.num_ != 0 && cl.lines.size() == 0 && Math.abs(pfd.numO - pfd.numX) < 2) {
-                out = "Game not finished";
+                //out = "Game not finished";
             } else if (cl.lines.size() > 1) {
                 out = "Impossible";
             } else if (Math.abs(pfd.numO - pfd.numX) > 1) {
