@@ -7,68 +7,138 @@ import java.util.Scanner;
 
 public class Main {     //aka controller in term MVC
 
+    static Scanner scanner = new Scanner(System.in);
+    static GameModel gameModel = new GameModel("         "); // aka Model
+    static GameField field = new GameField();          // aka View
+    static GamePlayer playerX;
+    static GamePlayer playerO;
+
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        Random random = new Random();
-
-        String inStr = "         ";
-        GameModel gameModel = new GameModel(inStr); // aka Model
-        GameField field = new GameField();          // aka View
-        field.printField(gameModel.getCurentState());
-        boolean isStop = false;
-        int column;
-        int row;
-        int moveCount = 0;
-        String strRes;
-
-        while (!isStop) {
-            System.out.print("Enter the coordinates: ");
-            String str = scanner.nextLine();
-            char[] chArr = str.toCharArray();
-            if (Character.isDigit(chArr[0]) && Character.isWhitespace(chArr[1]) && Character.isDigit(chArr[2])) {
-                row = Character.digit(chArr[0], 10);
-                column = Character.digit(chArr[2], 10);
+        boolean isExit = false;
+        String inStr;
+        String[] inCommands;
+        while (!isExit) {
+            System.out.print("Input command: ");
+            inStr = scanner.nextLine();
+            inCommands = inStr.split(" ");
+            if (inCommands[0].equals("exit")) {
+                isExit = true;
+                continue;
+            }
+            if (!inCommands[0].equals("start")) {
+                System.out.println("Bad parameters!");
+            } else if (inCommands.length != 3){
+                System.out.println("Bad parameters!");
+            } else if ((inCommands[1].equals("easy") || inCommands[1].equals("medium") ||
+                        inCommands[1].equals("hard") || inCommands[1].equals("user")) &&
+                        (inCommands[2].equals("easy") || inCommands[2].equals("medium") ||
+                         inCommands[2].equals("hard") || inCommands[2].equals("user"))) {
+                playerX = new GamePlayer(inCommands[1]);
+                playerO = new GamePlayer(inCommands[2]);
+                goGame();
             } else {
-                System.out.print("You should enter numbers!\n");
-                continue;
+                System.out.println("Bad parameters!");
             }
-            if ((column < 1 || column > 3) || (row < 1 || row > 3)) {
-                System.out.print("Coordinates should be from 1 to 3!\n");
-                continue;
-            }
-            if (gameModel.isOccupied(column, row)) {
-                System.out.print("This cell is occupied! Choose another one!\n");
-                continue;
-            }
+        }
+    }
 
-            gameModel.makeNextMove(column, row);
+    private static void goGame() {
+        GameModel.ArrayCoordinates ac;
+        boolean isStop = false;
+        String strRes;
+        gameModel = new GameModel("         ");
+        field.printField(gameModel.getCurentState());
+        while (!isStop) {
+            ac = playerX.setNextMoveCoordinates();
+            gameModel.makeNextMove(ac.column, ac.row);
             field.printField(gameModel.getCurentState());
             strRes = gameModel.analyzeField(gameModel.getCurentState());
-            if (strRes.equals("X wins") || strRes.equals("O wins") || strRes.equals("Draw")) {
+            if (checkGameResult(strRes)) {
                 isStop = true;
             } else {
-                System.out.println("Making move level \"easy\"");
-                boolean aiBotMoved = false;
-                while (!aiBotMoved) {
-                    int rndCell = random.nextInt(8);
-                    GameModel.ArrayCoordinates ac = GameModel.transformFromStrToArrCoordinates(rndCell);
-                    ac.column++;
-                    ac.row++;
-                    if (!gameModel.isOccupied(ac.column, ac.row)) {
-                        gameModel.makeNextMove(ac.column, ac.row);
-                        field.printField(gameModel.getCurentState());
-                        aiBotMoved = true;
-                    }
-                }
+                ac = playerO.setNextMoveCoordinates();
+                gameModel.makeNextMove(ac.column, ac.row);
+                field.printField(gameModel.getCurentState());
                 strRes = gameModel.analyzeField(gameModel.getCurentState());
-                if (strRes.equals("X wins") || strRes.equals("O wins") || strRes.equals("Draw")) {
+                if (checkGameResult(strRes)) {
                     isStop = true;
                 }
             }
-            System.out.print(strRes);
+            System.out.println(strRes);
+        }
+
+    }
+
+    private static boolean checkGameResult(String strRes) {
+        return strRes.equals("X wins") || strRes.equals("O wins") || strRes.equals("Draw");
+    }
+
+    private static class GamePlayer {
+        Random random = new Random();
+        String level;
+
+        GamePlayer(String level) {
+            this.level = level;
+        }
+
+        public GameModel.ArrayCoordinates setNextMoveCoordinates() {
+            GameModel.ArrayCoordinates ac;
+            if (level.equals("user")) {
+                ac = getUserInputCoordinates();
+            } else {
+                System.out.println("Making move level \"".concat(level).concat("\""));
+                ac = getAiBotInputCoordinates();
+            }
+            return ac;
+        }
+
+        private GameModel.ArrayCoordinates getUserInputCoordinates() {
+            GameModel.ArrayCoordinates ac = new GameModel.ArrayCoordinates();
+            int column = -1;
+            int row = -1;
+            boolean isCorrect = false;
+
+            while (!isCorrect) {
+                System.out.print("Enter the coordinates: ");
+                String str = scanner.nextLine();
+                char[] chArr = str.toCharArray();
+                if (Character.isDigit(chArr[0]) && Character.isWhitespace(chArr[1]) && Character.isDigit(chArr[2])) {
+                    row = Character.digit(chArr[0], 10);
+                    column = Character.digit(chArr[2], 10);
+                } else {
+                    System.out.print("You should enter numbers!\n");
+                    continue;
+                }
+                if ((column < 1 || column > 3) || (row < 1 || row > 3)) {
+                    System.out.print("Coordinates should be from 1 to 3!\n");
+                    continue;
+                }
+                if (GameModel.isOccupied(column, row)) {
+                    System.out.print("This cell is occupied! Choose another one!\n");
+                    continue;
+                }
+                isCorrect = true;
+            }
+            ac.row = row;
+            ac.column = column;
+            return ac;
+        }
+
+        private GameModel.ArrayCoordinates getAiBotInputCoordinates() {
+            GameModel.ArrayCoordinates ac = new GameModel.ArrayCoordinates();
+            boolean isCorrect = false;
+            while (!isCorrect) {
+                int rndCell = random.nextInt(8);
+                ac = GameModel.transformFromStrToArrCoordinates(rndCell);
+                ac.column++;
+                ac.row++;
+                if (!GameModel.isOccupied(ac.column, ac.row)) {
+                    isCorrect = true;
+                }
+            }
+            return  ac;
         }
     }
-    
 
     private static class GameField {
 
@@ -140,7 +210,8 @@ public class Main {     //aka controller in term MVC
                     inArr[2][i-6] = inChArr[i];
                 }*/
                 ArrayCoordinates ac = transformFromStrToArrCoordinates(i);
-                inArr[ac.row][ac.column] = inChArr[i];
+                //inArr[ac.row][ac.column] = inChArr[i];
+                inArr[ac.column][ac.row] = inChArr[i];
             }
             pfd.inArr = inArr;
             pfd.numX = numX;
@@ -245,12 +316,13 @@ public class Main {     //aka controller in term MVC
             return out;
         }
 
-        public boolean isOccupied(int column, int row) {
+        public static boolean isOccupied(int column, int row) {
             PreparedFieldData pfd;
             boolean out = true;
             pfd = prepareFieldData(currStr);
             int c = transformColumnCoordinate(column);
             if (pfd.inArr[c - 1][row - 1] == ' ') {
+            //if (pfd.inArr[column - 1][row - 1] == ' ') {
                 out = false;
             }
             return out;
