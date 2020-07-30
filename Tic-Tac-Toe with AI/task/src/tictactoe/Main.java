@@ -103,8 +103,8 @@ public class Main {     //aka controller in term MVC
                 String str = scanner.nextLine();
                 char[] chArr = str.toCharArray();
                 if (Character.isDigit(chArr[0]) && Character.isWhitespace(chArr[1]) && Character.isDigit(chArr[2])) {
-                    row = Character.digit(chArr[0], 10);
-                    column = Character.digit(chArr[2], 10);
+                    column = Character.digit(chArr[0], 10);
+                    row = Character.digit(chArr[2], 10);
                 } else {
                     System.out.print("You should enter numbers!\n");
                     continue;
@@ -128,15 +128,31 @@ public class Main {     //aka controller in term MVC
             GameModel.ArrayCoordinates ac = new GameModel.ArrayCoordinates();
             boolean isCorrect = false;
             while (!isCorrect) {
-                int rndCell = random.nextInt(8);
-                ac = GameModel.transformFromStrToArrCoordinates(rndCell);
-                ac.column++;
-                ac.row++;
+                //int rndCell = random.nextInt(8);
+                int rndCell = random.nextInt(10 - 1) + 1;
+                ac = transformFromStrToGameCoordinates(rndCell);
+                //ac.column++;
+                //ac.row++;
                 if (!GameModel.isOccupied(ac.column, ac.row)) {
                     isCorrect = true;
                 }
             }
             return  ac;
+        }
+
+        private static GameModel.ArrayCoordinates transformFromStrToGameCoordinates (int strPosition) {
+            GameModel.ArrayCoordinates ret = new GameModel.ArrayCoordinates();
+            if (strPosition < 4) {
+                ret.row = 3;
+                ret.column = strPosition;
+            } else if (strPosition < 7) {
+                ret.row = 2;
+                ret.column = strPosition - 3;
+            } else if (strPosition < 10) {
+                ret.row = 1;
+                ret.column = strPosition - 6;
+            }
+            return ret;
         }
     }
 
@@ -210,8 +226,8 @@ public class Main {     //aka controller in term MVC
                     inArr[2][i-6] = inChArr[i];
                 }*/
                 ArrayCoordinates ac = transformFromStrToArrCoordinates(i);
-                //inArr[ac.row][ac.column] = inChArr[i];
-                inArr[ac.column][ac.row] = inChArr[i];
+                inArr[ac.row][ac.column] = inChArr[i];
+                //inArr[ac.column][ac.row] = inChArr[i];
             }
             pfd.inArr = inArr;
             pfd.numX = numX;
@@ -245,14 +261,14 @@ public class Main {     //aka controller in term MVC
             return ret;
         }
 
-        private static int transformColumnCoordinate(int column) {
-            int c = column;
-            if (column == 1) {
-                c = 3;
-            } else if (column == 3) {
-                c = 1;
+        private static int transformRowCoordinate(int row) {
+            int r = row;
+            if (row == 1) {
+                r = 3;
+            } else if (row == 3) {
+                r = 1;
             }
-            return c;
+            return r;
         }
 
         public String analyzeField(String in) {
@@ -320,9 +336,9 @@ public class Main {     //aka controller in term MVC
             PreparedFieldData pfd;
             boolean out = true;
             pfd = prepareFieldData(currStr);
-            int c = transformColumnCoordinate(column);
-            if (pfd.inArr[c - 1][row - 1] == ' ') {
-            //if (pfd.inArr[column - 1][row - 1] == ' ') {
+            int r = transformRowCoordinate(row);
+            if (pfd.inArr[r - 1][column - 1] == ' ') {
+            //if (pfd.inArr[column - 1][r - 1] == ' ') {
                 out = false;
             }
             return out;
@@ -331,10 +347,13 @@ public class Main {     //aka controller in term MVC
         public void setUserMove(int column, int row, char userSig) {
             PreparedFieldData pfd;
             pfd = prepareFieldData(currStr);
-            int c = transformColumnCoordinate(column);
+            int r = transformRowCoordinate(row);
             if (column > 0 && column < 4 && row > 0 && row < 4) {
-                if (pfd.inArr[c - 1][row - 1] == ' ') {
-                    pfd.inArr[c - 1][row - 1] = userSig;
+                /*if (pfd.inArr[column - 1][r - 1] == ' ') {
+                    pfd.inArr[column - 1][r - 1] = userSig;
+                }*/
+                if (pfd.inArr[r - 1][column - 1] == ' ') {
+                    pfd.inArr[r - 1][column - 1] = userSig;
                 }
             }
             currStr = packFieldData(pfd.inArr);
