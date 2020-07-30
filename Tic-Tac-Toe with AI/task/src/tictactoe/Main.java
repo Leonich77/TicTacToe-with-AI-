@@ -64,9 +64,10 @@ public class Main {     //aka controller in term MVC
                     isStop = true;
                 }
             }
-            System.out.println(strRes);
+            if (!strRes.equals("")) {
+                System.out.println(strRes);
+            }
         }
-
     }
 
     private static boolean checkGameResult(String strRes) {
@@ -128,11 +129,8 @@ public class Main {     //aka controller in term MVC
             GameModel.ArrayCoordinates ac = new GameModel.ArrayCoordinates();
             boolean isCorrect = false;
             while (!isCorrect) {
-                //int rndCell = random.nextInt(8);
                 int rndCell = random.nextInt(10 - 1) + 1;
                 ac = transformFromStrToGameCoordinates(rndCell);
-                //ac.column++;
-                //ac.row++;
                 if (!GameModel.isOccupied(ac.column, ac.row)) {
                     isCorrect = true;
                 }
@@ -173,13 +171,10 @@ public class Main {     //aka controller in term MVC
     }
 
     private static class GameModel {
-        //private static final String inStr = "         ";
-        //private static String currStr = inStr;
         private static String currStr;
 
         public GameModel(String instr) {
             currStr = instr.replaceAll("_", " ");
-            //currStr = instr;
         }
 
         public String getCurentState () {
@@ -218,16 +213,8 @@ public class Main {     //aka controller in term MVC
                     num_++;
                 }
 
-                /*if (i < 3) {
-                    inArr[0][i] = inChArr[i];
-                } else if (i < 6) {
-                    inArr[1][i-3] = inChArr[i];
-                } else if (i < 9) {
-                    inArr[2][i-6] = inChArr[i];
-                }*/
                 ArrayCoordinates ac = transformFromStrToArrCoordinates(i);
                 inArr[ac.row][ac.column] = inChArr[i];
-                //inArr[ac.column][ac.row] = inChArr[i];
             }
             pfd.inArr = inArr;
             pfd.numX = numX;
@@ -338,7 +325,6 @@ public class Main {     //aka controller in term MVC
             pfd = prepareFieldData(currStr);
             int r = transformRowCoordinate(row);
             if (pfd.inArr[r - 1][column - 1] == ' ') {
-            //if (pfd.inArr[column - 1][r - 1] == ' ') {
                 out = false;
             }
             return out;
@@ -349,9 +335,6 @@ public class Main {     //aka controller in term MVC
             pfd = prepareFieldData(currStr);
             int r = transformRowCoordinate(row);
             if (column > 0 && column < 4 && row > 0 && row < 4) {
-                /*if (pfd.inArr[column - 1][r - 1] == ' ') {
-                    pfd.inArr[column - 1][r - 1] = userSig;
-                }*/
                 if (pfd.inArr[r - 1][column - 1] == ' ') {
                     pfd.inArr[r - 1][column - 1] = userSig;
                 }
